@@ -1,6 +1,6 @@
 public with sharing class JenkinsController {
     @AuraEnabled
-    public static string methodName(){
+    public static void methodName(){
         System.debug('Test Method');
     }
 }
