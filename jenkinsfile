@@ -6,17 +6,24 @@ node {
     def RUN_ARTIFACT_DIR="tests/${BUILD_NUMBER}"
     def SFDC_USERNAME
 
-    def HUB_ORG=env.HUB_ORG_DH                  // username of target Org
-    def SFDC_HOST = env.SFDC_HOST_DH            // Instance https://test.salesforce.com OR https://login.salesforce.com
-    def JWT_KEY_CRED_ID = env.JWT_CRED_ID_DH    // JWT Token
-    def CONNECTED_APP_CONSUMER_KEY=env.CONNECTED_APP_CONSUMER_KEY_DH // Client Id from Connected Appp
+    // def HUB_ORG=env.HUB_ORG_DH                  // username of target Org
+    def HUB_ORG="bdhawan@docmation.com.b2b410training"                  // username of target Org
+	
+    // def SFDC_HOST = env.SFDC_HOST_DH            // Instance https://test.salesforce.com OR https://login.salesforce.com
+    def SFDC_HOST = "https://test.salesforce.com"            // Instance https://test.salesforce.com OR https://login.salesforce.com
+	
+    // def JWT_KEY_CRED_ID = env.JWT_CRED_ID_DH    // JWT Token
+    def JWT_KEY_CRED_ID = "C:/OpenSSL/bin/certificates/server.key"    // JWT Token
+	
+    // def CONNECTED_APP_CONSUMER_KEY=env.CONNECTED_APP_CONSUMER_KEY_DH // Client Id from Connected Appp
+    def CONNECTED_APP_CONSUMER_KEY="3MVG9_4NR96cWRpEABTWHXEZ7MV_b6BVK6jKERysS3mVeirKiAunfX58eeo8Quf6YfTv16Z293Tp_cnoFFjvW" // Client Id from Connected Appp
 
     println 'KEY IS' 
     println JWT_KEY_CRED_ID
     println HUB_ORG
     println SFDC_HOST
     println CONNECTED_APP_CONSUMER_KEY
-    println env.sfdx
+	
     def toolbelt = "C:/Program Files/Salesforce CLI/bin/sfdx"       // Complete Path where Salesforce CLI is Installed
 
     stage('checkout source') {
@@ -24,31 +31,29 @@ node {
         checkout scm
     }
 
-    withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]) {
-        stage('Deploye Code') {
-            if (isUnix()) {
-                // SFDX command for Authorization of Source Org for Unix System
-                rc = sh returnStatus: true, script: "${toolbelt} force:auth:jwt:grant --clientid ${CONNECTED_APP_CONSUMER_KEY} --username ${HUB_ORG} --jwtkeyfile ${jwt_key_file} --setdefaultdevhubusername --instanceurl ${SFDC_HOST}"
-            }else{
-                // SFDX command for Authorization of Source Org in Windows System
-                 rc = bat returnStatus: true, script: "\"${toolbelt}\" force:auth:jwt:grant --clientid ${CONNECTED_APP_CONSUMER_KEY} --username ${HUB_ORG} --jwtkeyfile \"${jwt_key_file}\" --setdefaultdevhubusername --instanceurl ${SFDC_HOST}"
-            }
-            if (rc != 0) { error 'hub org authorization failed' }
+	stage('Deploye Code') {
+	    if (isUnix()) {
+		// SFDX command for Authorization of Source Org for Unix System
+		rc = sh returnStatus: true, script: "${toolbelt} force:auth:jwt:grant --clientid ${CONNECTED_APP_CONSUMER_KEY} --username ${HUB_ORG} --jwtkeyfile ${JWT_KEY_CRED_ID} --setdefaultdevhubusername --instanceurl ${SFDC_HOST}"
+	    }else{
+		// SFDX command for Authorization of Source Org in Windows System
+		 rc = bat returnStatus: true, script: "\"${toolbelt}\" force:auth:jwt:grant --clientid ${CONNECTED_APP_CONSUMER_KEY} --username ${HUB_ORG} --jwtkeyfile \"${jwt_key_file}\" --setdefaultdevhubusername --instanceurl ${SFDC_HOST}"
+	    }
+	    if (rc != 0) { error 'hub org authorization failed' }
 
-			println rc
-			
-			// need to pull out assigned username
-			if (isUnix()) {
-                // Deploy data in target org
-				rmsg = sh returnStdout: true, script: "${toolbelt} force:source:deploy -x manifest/package.xml -u ${HUB_ORG}"
-			}else{
-                // Deploy data in target org
-			   rmsg = bat returnStdout: true, script: "\"${toolbelt}\" force:source:deploy -x manifest/package.xml -u ${HUB_ORG}"
-			}
-			  
-            printf rmsg
-            println('End of Jenkins File')
-            println(rmsg)
-        }
-    }
+		println rc
+
+		// need to pull out assigned username
+		if (isUnix()) {
+	// Deploy data in target org
+			rmsg = sh returnStdout: true, script: "${toolbelt} force:source:deploy -x manifest/package.xml -u ${HUB_ORG}"
+		}else{
+	// Deploy data in target org
+		   rmsg = bat returnStdout: true, script: "\"${toolbelt}\" force:source:deploy -x manifest/package.xml -u ${HUB_ORG}"
+		}
+
+	    printf rmsg
+	    println('End of Jenkins File')
+	    println(rmsg)
+	}
 }
